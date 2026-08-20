@@ -196,13 +196,11 @@ df = pd.DataFrame(goals_list, columns=["ID", "Year", "Category", "Goal"])
 timeline_html = '<div class="timeline-container"><div class="timeline-line"></div>'
 
 for target_year in range(1, 11):
-    # Pull milestones matching the specific year segment
     year_milestones = df[df["Year"] == target_year]
     
     if not year_milestones.empty:
-        # Build transparent bubble description block string
         bubble_content = "<br>".join([f"<b>{row['Category']}:</b> {row['Goal'][:40]}..." for _, row in year_milestones.iterrows()])
-        dot_style = "border-color: #ec4899; box-shadow: 0 0 15px #ec4899;" # Glow pink if populated
+        dot_style = "border-color: #ec4899; box-shadow: 0 0 15px #ec4899;"
     else:
         bubble_content = "No milestones configured for this calendar track yet."
         dot_style = "border-color: #3b82f6;"
@@ -212,7 +210,7 @@ for target_year in range(1, 11):
 timeline_html += '</div>'
 
 # Force standard string rendering to prevent code blocks
-st.write(timeline_html, unsafe_allow_html=True)
+st.markdown(timeline_html, unsafe_allow_html=True)
 
 # 6. Column-Phase Macro Layout
 st.markdown("<br>", unsafe_allow_html=True)
@@ -222,7 +220,7 @@ with col1:
     st.markdown("<div class='phase-card'><h3>🚀 Phase 1: Near Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 1 - 3 • Core Foundations</p><hr style='border-color:#1f2937;'>", unsafe_allow_html=True)
     p1_df = df[df["Year"] <= 3]
     if not p1_df.empty:
-        for _, row in p1_df.iterrows():
+        for idx, row in p1_df.iterrows():
             st.markdown(f"<div class='goal-item'><b>Year {row['Year']} — {row['Category']}</b><br><span style='color:#d1d5db; font-size:14px;'>{row['Goal']}</span></div>", unsafe_allow_html=True)
             if st.button("🗑️ Drop", key=f"del_{row['ID']}", help="Remove from database"):
                 cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
@@ -234,7 +232,7 @@ with col2:
     st.markdown("<div class='phase-card'><h3>🏗️ Phase 2: Mid Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 4 - 6 • Transition Shifts</p><hr style='border-color:#1f2937;'>", unsafe_allow_html=True)
     p2_df = df[(df["Year"] > 3) & (df["Year"] <= 6)]
     if not p2_df.empty:
-        for _, row in p2_df.iterrows():
+        for idx, row in p2_df.iterrows():
             st.markdown(f"<div class='goal-item' style='border-left-color:#3b82f6;'><b>Year {row['Year']} — {row['Category']}</b><br><span style='color:#d1d5db; font-size:14px;'>{row['Goal']}</span></div>", unsafe_allow_html=True)
             if st.button("🗑️ Drop", key=f"del_{row['ID']}", help="Remove from database"):
                 cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
@@ -246,3 +244,4 @@ with col3:
     st.markdown("<div class='phase-card'><h3>📈 Phase 3: Far Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 7 - 10 • Compounding Scalability</p><hr style='border-color:#1f2937;'>", unsafe_allow_html=True)
     p3_df = df[df["Year"] > 6]
     if not p3_df.empty:
+        for idx, row in p3_df.iterrows():
