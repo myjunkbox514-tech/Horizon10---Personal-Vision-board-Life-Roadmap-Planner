@@ -81,7 +81,7 @@ st.markdown("""
     .perk-popup {
         visibility: hidden;
         width: 250px;
-        background: rgba(10, 15, 30, 0.9);
+        background: rgba(10, 15, 30, 0.95);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: #f1f5f9;
         text-align: center;
@@ -104,7 +104,7 @@ st.markdown("""
         margin-left: -6px;
         border-width: 6px;
         border-style: solid;
-        border-color: rgba(10, 15, 30, 0.9) transparent transparent transparent;
+        border-color: rgba(10, 15, 30, 0.95) transparent transparent transparent;
     }
     .constellation-node:hover .perk-popup {
         visibility: visible;
@@ -169,7 +169,7 @@ st.markdown("""
 
 # 2. Database Core Mechanics Setup
 def init_db():
-    conn = sqlite3.connect("skyrim_blueprint.db", check_same_thread=False)
+    conn = sqlite3.connect("skyrim_blueprint_v2.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
     cursor.execute("""
@@ -208,10 +208,26 @@ with st.sidebar.form("add_perk_form", clear_on_submit=True):
     submit = st.form_submit_button("Engrave Into Constellation")
     
     if submit and new_goal.strip():
-        # Set arbitrary point requirement value modifier based on targeted timeline year spacing multiplier
         level_req = new_year * 10
         cursor.execute("INSERT INTO goals (board_id, year, category, goal, level_req) VALUES (?, ?, ?, ?, ?)",
                        (active_board_id, new_year, new_cat, new_goal.strip(), level_req))
+        conn.commit()
+        st.rerun()
+
+# Board Management Settings
+with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
+    new_board = st.text_input("Create Brand New Roadmap:")
+    if st.button("Initialize New Canvas") and new_board.strip():
+        try:
+            cursor.execute("INSERT INTO boards (name) VALUES (?)", (new_board.strip(),))
+            conn.commit()
+            st.rerun()
+        except sqlite3.IntegrityError:
+            st.error("Name taken!")
+    st.markdown("---")
+    if st.button("🗑️ Wipe Active Canvas Completely"):
+        cursor.execute("DELETE FROM boards WHERE id = ?", (active_board_id,))
+        cursor.execute("DELETE FROM goals WHERE board_id = ?", (active_board_id,))
         conn.commit()
         st.rerun()
 
@@ -223,18 +239,15 @@ st.markdown("<p class='skyrim-subtitle'>Level 100 Personal Growth Interface Matr
 cursor.execute("SELECT id, year, category, goal, level_req FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
 df = pd.DataFrame(cursor.fetchall(), columns=["ID", "Year", "Category", "Goal", "LevelReq"])
 
-# Dynamically compute metrics for the HUD status bar fill values
-total_milestones = len(df)
-career_count = len(df[df["Category"] == "💼 Career & Wealth"])
-health_count = len(df[df["Category"] == "💪 Health & Vitality"])
+# Compute resource bar metrics
 growth_count = len(df[df["Category"] == "🧠 Personal Growth"])
+health_count = len(df[df["Category"] == "💪 Health & Vitality"])
+career_count = len(df[df["Category"] == "💼 Career & Wealth"])
 
-# Convert to percentages for CSS filling widths
 magicka_width = min(100, (growth_count * 20) + 20)
 health_width = min(100, (health_count * 20) + 20)
 stamina_width = min(100, (career_count * 20) + 20)
 
-# Render Skyrim Core HUD Bars (Magicka / Health / Stamina setup remixed)
 st.markdown(f"""
 <div class='hud-bar-container'>
     <div class='hud-bar-wrapper'>
@@ -252,22 +265,17 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# 5. Build the Dynamic Interactive Nebula Sky Map Panel Grid
-nebula_html = '<div class="nebula-track"><div class="timeline-line"></div>'
+# 5. Build the Interactive Nebula Sky Map Panel Grid
+nebula_html = '<div class="nebula-track">'
 
 for step_year in range(1, 11):
     year_nodes = df[df["Year"] == step_year]
     
     if not year_nodes.empty:
-        # Loop formatting individual node text descriptors within the custom tooltip glass block container element
-        bubble_body = "<br>".join([f"<span style='color:#a78bfa;'>✦</span> <b>{row['Category'][2:]}:</b> {row['Goal'][:35]}" for idx, row in year_nodes.iterrows()])
+        bubble_body = "<br>".join([f"✦ <b>{row['Category'][2:]}:</b> {row['Goal'][:35]}" for idx, row in year_nodes.iterrows()])
         node_glow = "background: #a78bfa; border-color: #ffffff; box-shadow: 0 0 20px #8b5cf6, 0 0 40px #ff007f;"
     else:
-        bubble_body = "Locked. No active development parameters registered for this calendar cycle."
+        bubble_body = "Locked. No active development parameters registered."
         node_glow = "background: #111424; border-color: #3b82f6;"
 
-    nebula_html += f"""
-    <div class="constellation-node">
-        <div class="perk-popup">
-            <div class="node-title">✨ Milestone Orbit {step_year}</div>
-            <div style="font-size:10px; color:#64748b; margin-bottom:8px; text-transform:uppercase;">Required Skill LVL: {step_year * 10}</div>
+    # Appended using clean inline string blocks to prevent parsing crashes
