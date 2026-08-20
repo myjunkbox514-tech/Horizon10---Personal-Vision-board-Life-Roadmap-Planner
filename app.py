@@ -4,7 +4,7 @@ import pandas as pd
 
 # 1. Page Configuration & Skyrim Cosmic Theme Injection
 st.set_page_config(
-    page_title="Dovahkiin | Horizon10 Skill Tree",
+    page_title="Horizon10",
     page_icon="🌌",
     layout="wide"
 )
@@ -110,8 +110,8 @@ with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
         st.rerun()
 
 # 4. Main Character HUD Layout Construction
-st.markdown(f"<h1 style='text-align: center; color: #ffffff;'>✨ {selected_board_name} ✨</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; font-size: 0.85rem;'>Level 100 Personal Growth Skill Tree Interface</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #ffffff;'>✨ HORIZON10 ✨</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; font-size: 0.95rem;'>Active Save: {selected_board_name}</p>", unsafe_allow_html=True)
 
 cursor.execute("SELECT id, year, category, goal, level_req FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
 df = pd.DataFrame(cursor.fetchall(), columns=["ID", "Year", "Category", "Goal", "LevelReq"])
@@ -206,30 +206,30 @@ with col1:
     p1_nodes = df[df["Year"] <= 3]
     if p1_nodes.empty:
         st.caption("No novice traits active.")
-    
-    for idx, row in p1_nodes.iterrows():
-        with st.container(border=True):
-            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                conn.commit()
-                st.rerun()
+    else:
+        for idx, row in p1_nodes.iterrows():
+            with st.container(border=True):
+                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                    conn.commit()
+                    st.rerun()
 
 with col2:
     st.markdown("#### 🏗️ THE ADEPT TREE\n*Level 40 - 60 Perks (Years 4-6)*")
     p2_nodes = df[(df["Year"] > 3) & (df["Year"] <= 6)]
     if p2_nodes.empty:
         st.caption("No adept traits active.")
-        
-    for idx, row in p2_nodes.iterrows():
-        with st.container(border=True):
-            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                conn.commit()
-                st.rerun()
+    else:
+        for idx, row in p2_nodes.iterrows():
+            with st.container(border=True):
+                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                    conn.commit()
+                    st.rerun()
 
 with col3:
     st.markdown("#### 📈 THE MASTER TREE\n*Level 70 - 100 Perks (Years 7-10)*")
