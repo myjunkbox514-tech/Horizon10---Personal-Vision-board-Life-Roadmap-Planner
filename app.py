@@ -206,32 +206,34 @@ with col1:
     p1_nodes = df[df["Year"] <= 3]
     if p1_nodes.empty:
         st.caption("No novice traits active.")
-    else:
-        for idx, row in p1_nodes.iterrows():
-            with st.container(border=True):
-                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                    conn.commit()
-                    st.rerun()
+    
+    for idx, row in p1_nodes.iterrows():
+        with st.container(border=True):
+            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                conn.commit()
+                st.rerun()
 
 with col2:
     st.markdown("#### 🏗️ THE ADEPT TREE\n*Level 40 - 60 Perks (Years 4-6)*")
     p2_nodes = df[(df["Year"] > 3) & (df["Year"] <= 6)]
     if p2_nodes.empty:
         st.caption("No adept traits active.")
-    else:
-        for idx, row in p2_nodes.iterrows():
-            with st.container(border=True):
-                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                    conn.commit()
-                    st.rerun()
+        
+    for idx, row in p2_nodes.iterrows():
+        with st.container(border=True):
+            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                conn.commit()
+                st.rerun()
 
 with col3:
     st.markdown("#### 📈 THE MASTER TREE\n*Level 70 - 100 Perks (Years 7-10)*")
     p3_nodes = df[df["Year"] > 6]
     if p3_nodes.empty:
+        st.caption("No master legendary traits active.")
+        
