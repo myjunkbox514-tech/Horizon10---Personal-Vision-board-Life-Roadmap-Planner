@@ -42,9 +42,7 @@ st.markdown("""
 def init_db():
     conn = sqlite3.connect("skyrim_blueprint_final.db", check_same_thread=False)
     cursor = conn.cursor()
-    # CRITICAL BUG FIX: Explicitly turn on foreign key cascade support for SQLite
     cursor.execute("PRAGMA foreign_keys = ON")
-    
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
@@ -64,8 +62,6 @@ def init_db():
 
 conn = init_db()
 cursor = conn.cursor()
-
-# Enforce foreign keys on connection re-checks
 cursor.execute("PRAGMA foreign_keys = ON")
 
 # 3. Profile Management Console Layout
@@ -201,35 +197,41 @@ else:
 
 st.markdown("---")
 
-# 7. Stable Non-Nested Perk Tree Log Display Cards
+# 7. Structured Phase Tree Column View Panel
 st.subheader("📜 ACTIVE PERK TREE LOGS")
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("#### 🚀 THE NOVICE TREE\n*Level 10 - 30 Perks (Years 1-3)*")
     p1_nodes = df[df["Year"] <= 3]
-    if not p1_nodes.empty:
-        for idx, row in p1_nodes.iterrows():
-            with st.container(border=True):
-                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                    conn.commit()
-                    st.rerun()
-    else:
+    if p1_nodes.empty:
         st.caption("No novice traits active.")
+    
+    for idx, row in p1_nodes.iterrows():
+        with st.container(border=True):
+            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                conn.commit()
+                st.rerun()
 
 with col2:
     st.markdown("#### 🏗️ THE ADEPT TREE\n*Level 40 - 60 Perks (Years 4-6)*")
     p2_nodes = df[(df["Year"] > 3) & (df["Year"] <= 6)]
-    if not p2_nodes.empty:
-        for idx, row in p2_nodes.iterrows():
-            with st.container(border=True):
-                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
-                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-                    conn.commit()
-                    st.rerun()
-    else:
+    if p2_nodes.empty:
+        st.caption("No adept traits active.")
+        
+    for idx, row in p2_nodes.iterrows():
+        with st.container(border=True):
+            render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                conn.commit()
+                st.rerun()
+
+with col3:
+    st.markdown("#### 📈 THE MASTER TREE\n*Level 70 - 100 Perks (Years 7-10)*")
+    p3_nodes = df[df["Year"] > 6]
+    if p3_nodes.empty:
