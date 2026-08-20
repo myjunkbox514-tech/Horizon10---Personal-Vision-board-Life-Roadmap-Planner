@@ -68,7 +68,7 @@ st.markdown("""
     .timeline-bubble {
         visibility: hidden;
         width: 220px;
-        background: rgba(17, 24, 39, 0.85);
+        background: rgba(17, 24, 39, 0.95);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         color: #fff;
@@ -105,6 +105,7 @@ st.markdown("""
         border: 1px solid #1f2937;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         min-height: 400px;
+        margin-bottom: 20px;
     }
     .goal-item {
         background: #1f2937;
@@ -206,19 +207,12 @@ for target_year in range(1, 11):
         bubble_content = "No milestones configured for this calendar track yet."
         dot_style = "border-color: #3b82f6;"
 
-    timeline_html += f"""
-    <div class="timeline-node">
-        <div class="timeline-bubble">
-            <span style='color:#3b82f6; font-weight:bold; font-size:15px;'>📅 Year {target_year} Forecast</span><br>
-            <hr style='border-color:rgba(255,255,255,0.1); margin:6px 0;'>
-            <span style='font-size:12px; color:#e5e7eb; display:block; text-align:left;'>{bubble_content}</span>
-        </div>
-        <div class="timeline-dot" style="{dot_style}"></div>
-        <div class="timeline-label">Yr {target_year}</div>
-    </div>
-    """
+    timeline_html += f"""<div class="timeline-node"><div class="timeline-bubble"><span style='color:#3b82f6; font-weight:bold; font-size:15px;'>📅 Year {target_year} Forecast</span><br><hr style='border-color:rgba(255,255,255,0.1); margin:6px 0;'><span style='font-size:12px; color:#e5e7eb; display:block; text-align:left;'>{bubble_content}</span></div><div class="timeline-dot" style="{dot_style}"></div><div class="timeline-label">Yr {target_year}</div></div>"""
+
 timeline_html += '</div>'
-st.markdown(timeline_html, unsafe_allow_html=True)
+
+# Force standard string rendering to prevent code blocks
+st.write(timeline_html, unsafe_allow_html=True)
 
 # 6. Column-Phase Macro Layout
 st.markdown("<br>", unsafe_allow_html=True)
@@ -251,3 +245,4 @@ with col2:
 with col3:
     st.markdown("<div class='phase-card'><h3>📈 Phase 3: Far Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 7 - 10 • Compounding Scalability</p><hr style='border-color:#1f2937;'>", unsafe_allow_html=True)
     p3_df = df[df["Year"] > 6]
+    if not p3_df.empty:
