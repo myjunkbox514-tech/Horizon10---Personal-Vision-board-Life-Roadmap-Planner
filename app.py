@@ -2,116 +2,52 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# 1. Page Configuration & Custom Theme Styles Injection
+# 1. Page Configuration & Skyrim Cosmic Theme Injection
 st.set_page_config(
-    page_title="Horizon10 | Vision Studio",
-    page_icon="✨",
+    page_title="Dovahkiin | Horizon10 Skill Tree",
+    page_icon="🌌",
     layout="wide"
 )
 
-# Custom UI/UX Styles injection
+# Deep cosmic ambient backdrop using safe, unnested global CSS
 st.markdown("""
 <style>
     .stApp {
-        background-color: #0b0f19;
-        color: #f3f4f6;
+        background: radial-gradient(circle at center, #0f172a 0%, #020617 100%) !important;
+        color: #f8fafc !important;
     }
-    .timeline-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: relative;
-        padding: 40px 20px;
-        background: linear-gradient(145deg, #111827, #1f2937);
-        border-radius: 16px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        border: 1px solid #374151;
+    h1, h2, h3, h4 {
+        text-transform: uppercase !important;
+        letter-spacing: 2px !important;
     }
-    .timeline-line {
-        position: absolute;
-        top: 50%;
-        left: 5%;
-        right: 5%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
-        z-index: 1;
-        transform: translateY(-50%);
-    }
-    .timeline-node {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        cursor: pointer;
-    }
-    .timeline-dot {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: #111827;
-        border: 4px solid #3b82f6;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
-    }
-    .timeline-node:hover .timeline-dot {
-        transform: scale(1.4);
-        background-color: #3b82f6;
-        box-shadow: 0 0 20px #3b82f6, 0 0 40px #8b5cf6;
-    }
-    .timeline-bubble {
-        visibility: hidden;
-        width: 220px;
-        background: rgba(17, 24, 39, 0.95);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        color: #fff;
-        text-align: center;
-        border-radius: 12px;
-        padding: 12px;
-        position: absolute;
-        z-index: 10;
-        bottom: 150%;
-        left: 50%;
-        transform: translateX(-50%) translateY(10px);
-        opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }
-    .timeline-node:hover .timeline-bubble {
-        visibility: visible;
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    .timeline-label {
-        margin-top: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        color: #9ca3af;
-    }
-    .phase-card {
-        background: #111827;
-        border-radius: 14px;
-        padding: 20px;
-        border: 1px solid #1f2937;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        min-height: 250px;
-        margin-bottom: 20px;
+    .action-plan-box {
+        background-color: rgba(30, 41, 59, 0.5);
+        border-left: 3px solid #38bdf8;
+        padding: 10px 15px;
+        margin-top: 5px;
+        border-radius: 0 6px 6px 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Database Setup
+# 2. Database Core Setup (Upgraded for Sub-Action Plans)
 def init_db():
-    conn = sqlite3.connect("roadmap_v3.db", check_same_thread=False)
+    conn = sqlite3.connect("skyrim_blueprint_v4.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
+    # Core Goal Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT, board_id INTEGER, 
-            year INTEGER, category TEXT, goal TEXT, status TEXT
+            year INTEGER, category TEXT, goal TEXT, level_req INTEGER
+        )
+    """)
+    # Linked Sub-Action Plan Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS action_plans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, goal_id INTEGER,
+            step_description TEXT,
+            FOREIGN KEY(goal_id) REFERENCES goals(id) ON DELETE CASCADE
         )
     """)
     conn.commit()
@@ -120,36 +56,37 @@ def init_db():
 conn = init_db()
 cursor = conn.cursor()
 
-# 3. Sidebar Board Selection
-st.sidebar.markdown("<h2 style='color:#3b82f6; margin-bottom:0;'>🎨 Studio Canvas</h2>", unsafe_allow_html=True)
+# 3. Sidebar Configuration Console Layout
+st.sidebar.markdown("### 🌌 LEVEL UP STATUS")
 
 cursor.execute("SELECT id, name FROM boards")
 all_boards = cursor.fetchall()
 if not all_boards:
-    cursor.execute("INSERT INTO boards (name) VALUES (?)", ("My Vision Core Blueprint",))
+    cursor.execute("INSERT INTO boards (name) VALUES (?)", ("Main Character Arc Plan",))
     conn.commit()
     st.rerun()
 
 board_dict = {name: b_id for b_id, name in all_boards}
-selected_board_name = st.sidebar.selectbox("Current Active Map:", list(board_dict.keys()))
+selected_board_name = st.sidebar.selectbox("Active Profile Save Sheet:", list(board_dict.keys()))
 active_board_id = board_dict[selected_board_name]
 
-# 4. Sidebar Form: Add New Milestones
+# Form panel to generate skill perks matching constellations
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ➕ Drop a New Milestone")
-with st.sidebar.form("add_goal_form", clear_on_submit=True):
-    new_year = st.slider("Target Horizon Year", min_value=1, max_value=10, value=1)
-    new_cat = st.selectbox("Life Pillar Focus", ["💼 Career & Wealth", "🏡 Lifestyle & Home", "💪 Health & Vitality", "❤️ Relationships", "🧠 Personal Growth"])
-    new_goal = st.text_input("Enter your dream brief...")
-    submit = st.form_submit_button("Manifest Onto Board")
+st.sidebar.markdown("### 🏹 Unlock a New Master Perk")
+with st.sidebar.form("add_perk_form", clear_on_submit=True):
+    new_year = st.slider("Required Level Milestone (Year Horizon)", min_value=1, max_value=10, value=1)
+    new_cat = st.selectbox("Constellation Skill Tree Pillar", ["💼 Career & Wealth", "🏡 Lifestyle & Home", "💪 Health & Vitality", "❤️ Relationships", "🧠 Personal Growth"])
+    new_goal = st.text_input("End Goal Objective (e.g. Lose Weight)...")
+    submit = st.form_submit_button("Engrave Into Constellation")
     
     if submit and new_goal.strip():
-        cursor.execute("INSERT INTO goals (board_id, year, category, goal, status) VALUES (?, ?, ?, ?, ?)",
-                       (active_board_id, new_year, new_cat, new_goal.strip(), "In Progress"))
+        level_req = new_year * 10
+        cursor.execute("INSERT INTO goals (board_id, year, category, goal, level_req) VALUES (?, ?, ?, ?, ?)",
+                       (active_board_id, new_year, new_cat, new_goal.strip(), level_req))
         conn.commit()
         st.rerun()
 
-# Sidebar Settings: Creation & Wiping
+# Board Management Settings
 with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
     new_board = st.text_input("Create Brand New Roadmap:")
     if st.button("Initialize New Canvas") and new_board.strip():
@@ -166,51 +103,125 @@ with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
         conn.commit()
         st.rerun()
 
-# 5. Main App Header Interface
-st.markdown(f"<h1 style='text-align: center; margin-bottom: 5px; color:#ffffff;'>✨ {selected_board_name}</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af; margin-bottom: 40px;'>Hover over timeline nodes below to peek into future targets instantly.</p>", unsafe_allow_html=True)
+# 4. Main Character HUD Layout Construction
+st.markdown(f"<h1 style='text-align: center; color: #ffffff;'>✨ {selected_board_name} ✨</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; font-size: 0.85rem;'>Level 100 Personal Growth Skill Tree Interface</p>", unsafe_allow_html=True)
 
-# Fetch Goal Data
-cursor.execute("SELECT id, year, category, goal FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
-goals_list = cursor.fetchall()
-df = pd.DataFrame(goals_list, columns=["ID", "Year", "Category", "Goal"])
+# Pull current profile's inventory rows
+cursor.execute("SELECT id, year, category, goal, level_req FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
+df = pd.DataFrame(cursor.fetchall(), columns=["ID", "Year", "Category", "Goal", "LevelReq"])
 
-# 6. Interactive Floating-Bubble Map Generator
-timeline_html = '<div class="timeline-container"><div class="timeline-line"></div>'
-for target_year in range(1, 11):
-    year_milestones = df[df["Year"] == target_year]
-    if not year_milestones.empty:
-        bubble_content = "<br>".join([f"<b>{row['Category']}:</b> {row['Goal'][:40]}..." for idx, row in year_milestones.iterrows()])
-        dot_style = "border-color: #ec4899; box-shadow: 0 0 15px #ec4899;"
+# Compute resource bar metrics
+growth_count = len(df[df["Category"] == "🧠 Personal Growth"])
+health_count = len(df[df["Category"] == "💪 Health & Vitality"])
+career_count = len(df[df["Category"] == "💼 Career & Wealth"])
+
+st.markdown("---")
+hud_col1, hud_col2, hud_col3 = st.columns(3)
+with hud_col1:
+    st.metric(label="🧠 MAGICKA (Personal Growth Focus)", value=f"{min(100, (growth_count * 20) + 20)} / 100 Level")
+with hud_col2:
+    st.metric(label="❤️ HEALTH (Vitality & Wellbeing Status)", value=f"{min(100, (health_count * 20) + 20)} / 100 Level")
+with hud_col3:
+    st.metric(label="⚡ STAMINA (Wealth Engine & Career)", value=f"{min(100, (career_count * 20) + 20)} / 100 Level")
+st.markdown("---")
+
+# Helper function to print out a clean view of the sub-actions linked to any given goal
+def render_node_contents(row_id, row_category, row_goal):
+    st.markdown(f"#### {row_category}")
+    st.markdown(f"**🎯 Target:** {row_goal}")
+    
+    # Fetch Action Plans for this specific goal
+    cursor.execute("SELECT id, step_description FROM action_plans WHERE goal_id = ?", (row_id,))
+    steps = cursor.fetchall()
+    
+    if steps:
+        st.markdown("<p style='font-size:12px; color:#38bdf8; margin-bottom:2px; text-transform:uppercase;'>📋 Active Execution Blueprint:</p>", unsafe_allow_html=True)
+        for s_id, s_desc in steps:
+            st.markdown(f"<div class='action-plan-box'>• {s_desc}</div>", unsafe_allow_html=True)
     else:
-        bubble_content = "No milestones configured for this calendar track yet."
-        dot_style = "border-color: #3b82f6;"
+        st.caption("No custom action plan added to this objective yet.")
 
-    timeline_html += f"""<div class="timeline-node"><div class="timeline-bubble"><span style='color:#3b82f6; font-weight:bold; font-size:15px;'>📅 Year {target_year} Forecast</span><br><hr style='border-color:rgba(255,255,255,0.1); margin:6px 0;'><span style='font-size:12px; color:#e5e7eb; display:block; text-align:left;'>{bubble_content}</span></div><div class="timeline-dot" style="{dot_style}"></div><div class="timeline-label">Yr {target_year}</div></div>"""
-timeline_html += '</div>'
+# 5. High-End Skyrim Constellation Map Dashboard Track (With inline action display)
+st.subheader("🌌 THE ACTIVE CONSTELLATION MAP")
+st.write("Expand a Level Node star to gaze into your registered dream paths and custom execution steps.")
 
-st.markdown(timeline_html, unsafe_allow_html=True)
+map_cols = st.columns(5)
+for i in range(1, 6):
+    with map_cols[i-1]:
+        year_nodes = df[df["Year"] == i]
+        node_status = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
+        with st.expander(f"⭐ LEVEL {i*10} ({node_status})", expanded=False):
+            if not year_nodes.empty:
+                for idx, row in year_nodes.iterrows():
+                    render_node_contents(row['ID'], row['Category'], row['Goal'])
+                    st.markdown("---")
+            else:
+                st.caption("No development paths active here.")
 
-# 7. Clean Macro Data Management Desk
-st.markdown("<br>", unsafe_allow_html=True)
+map_cols_2 = st.columns(5)
+for i in range(6, 11):
+    with map_cols_2[i-6]:
+        year_nodes = df[df["Year"] == i]
+        node_status = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
+        with st.expander(f"⭐ LEVEL {i*10} ({node_status})", expanded=False):
+            if not year_nodes.empty:
+                for idx, row in year_nodes.iterrows():
+                    render_node_contents(row['ID'], row['Category'], row['Goal'])
+                    st.markdown("---")
+            else:
+                st.caption("No development paths active here.")
+
+st.markdown("---")
+
+# 6. Interactive Workshop Module (Build Custom Action Blueprints dynamically)
+st.subheader("🛠️ THE MASTER WORKSHOP: STRATEGIZE BLUEPRINTS")
+if not df.empty:
+    st.write("Select any goal below to inject highly specific tracking habits or execution details directly beneath it.")
+    
+    # Create dropdown picker mapping cleanly to current master goals
+    goal_options = {f"Year {r['Year']} [{r['Category']}] - {r['Goal']}": r['ID'] for idx, r in df.iterrows()}
+    selected_target_str = st.selectbox("Choose Target Goal to Map Out:", list(goal_options.keys()))
+    selected_target_id = goal_options[selected_target_str]
+    
+    # Single-line input form for the blueprint steps
+    with st.form("action_step_form", clear_on_submit=True):
+        new_step = st.text_input("What action or habit will you do to accomplish this? (e.g., 'Hit the gym 3x a week')")
+        add_step_btn = st.form_submit_button("🔨 Inject Action Step into Goal")
+        
+        if add_step_btn and new_step.strip():
+            cursor.execute("INSERT INTO action_plans (goal_id, step_description) VALUES (?, ?)", (selected_target_id, new_step.strip()))
+            conn.commit()
+            st.toast("Action plan step registered!")
+            st.rerun()
+else:
+    st.info("Add an initial goal from the sidebar to open the Action Strategy Workshop module.")
+
+st.markdown("---")
+
+# 7. Structured Phase Tree Column View Panel
+st.subheader("📜 ACTIVE PERK TREE LOGS")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("<div class='phase-card'><h3>🚀 Phase 1: Near Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 1 - 3 • Core Foundations</p></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div class='phase-card'><h3>🏗️ Phase 2: Mid Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 4 - 6 • Transition Shifts</p></div>", unsafe_allow_html=True)
-with col3:
-    st.markdown("<div class='phase-card'><h3>📈 Phase 3: Far Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 7 - 10 • Compounding Results</p></div>", unsafe_allow_html=True)
+    st.markdown("#### 🚀 THE NOVICE TREE\n*Level 10 - 30 Perks (Years 1-3)*")
+    p1_nodes = df[df["Year"] <= 3]
+    if not p1_nodes.empty:
+        for idx, row in p1_nodes.iterrows():
+            with st.container(border=True):
+                render_node_contents(row['ID'], row['Category'], row['Goal'])
+                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                    conn.commit()
+                    st.rerun()
+    else:
+        st.caption("No novice traits active.")
 
-st.markdown("### 📊 Active Milestones Registry")
-if not df.empty:
-    for idx, row in df.iterrows():
-        r_col1, r_col2, r_col3 = st.columns([2, 6, 2])
-        r_col1.write(f"**Year {row['Year']}** ({row['Category']})")
-        r_col2.info(row['Goal'])
-        if r_col3.button("🗑️ Drop", key=f"del_{row['ID']}"):
-            cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-            conn.commit()
-            st.rerun()
-else:
-    st.info("Your active vision canvas is completely blank. Drop a milestone via the sidebar menu to begin tracking.")
+with col2:
+    st.markdown("#### 🏗️ THE ADEPT TREE\n*Level 40 - 60 Perks (Years 4-6)*")
+    p2_nodes = df[(df["Year"] > 3) & (df["Year"] <= 6)]
+    if not p2_nodes.empty:
+        for idx, row in p2_nodes.iterrows():
+            with st.container(border=True):
+                render_node_contents(row['ID'], row['Category'], row['Goal'])
+                if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
