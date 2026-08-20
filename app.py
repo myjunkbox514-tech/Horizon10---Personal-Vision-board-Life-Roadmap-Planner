@@ -30,19 +30,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Database Core Setup (Upgraded for Sub-Action Plans)
+# 2. Database Core Setup
 def init_db():
-    conn = sqlite3.connect("skyrim_blueprint_v4.db", check_same_thread=False)
+    conn = sqlite3.connect("skyrim_blueprint_v5.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
-    # Core Goal Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT, board_id INTEGER, 
             year INTEGER, category TEXT, goal TEXT, level_req INTEGER
         )
     """)
-    # Linked Sub-Action Plan Table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS action_plans (
             id INTEGER PRIMARY KEY AUTOINCREMENT, goal_id INTEGER,
@@ -70,7 +68,6 @@ board_dict = {name: b_id for b_id, name in all_boards}
 selected_board_name = st.sidebar.selectbox("Active Profile Save Sheet:", list(board_dict.keys()))
 active_board_id = board_dict[selected_board_name]
 
-# Form panel to generate skill perks matching constellations
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🏹 Unlock a New Master Perk")
 with st.sidebar.form("add_perk_form", clear_on_submit=True):
@@ -86,7 +83,6 @@ with st.sidebar.form("add_perk_form", clear_on_submit=True):
         conn.commit()
         st.rerun()
 
-# Board Management Settings
 with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
     new_board = st.text_input("Create Brand New Roadmap:")
     if st.button("Initialize New Canvas") and new_board.strip():
@@ -107,11 +103,9 @@ with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
 st.markdown(f"<h1 style='text-align: center; color: #ffffff;'>✨ {selected_board_name} ✨</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #94a3b8; text-transform: uppercase; letter-spacing: 3px; font-size: 0.85rem;'>Level 100 Personal Growth Skill Tree Interface</p>", unsafe_allow_html=True)
 
-# Pull current profile's inventory rows
 cursor.execute("SELECT id, year, category, goal, level_req FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
 df = pd.DataFrame(cursor.fetchall(), columns=["ID", "Year", "Category", "Goal", "LevelReq"])
 
-# Compute resource bar metrics
 growth_count = len(df[df["Category"] == "🧠 Personal Growth"])
 health_count = len(df[df["Category"] == "💪 Health & Vitality"])
 career_count = len(df[df["Category"] == "💼 Career & Wealth"])
@@ -126,15 +120,11 @@ with hud_col3:
     st.metric(label="⚡ STAMINA (Wealth Engine & Career)", value=f"{min(100, (career_count * 20) + 20)} / 100 Level")
 st.markdown("---")
 
-# Helper function to print out a clean view of the sub-actions linked to any given goal
 def render_node_contents(row_id, row_category, row_goal):
     st.markdown(f"#### {row_category}")
     st.markdown(f"**🎯 Target:** {row_goal}")
-    
-    # Fetch Action Plans for this specific goal
     cursor.execute("SELECT id, step_description FROM action_plans WHERE goal_id = ?", (row_id,))
     steps = cursor.fetchall()
-    
     if steps:
         st.markdown("<p style='font-size:12px; color:#38bdf8; margin-bottom:2px; text-transform:uppercase;'>📋 Active Execution Blueprint:</p>", unsafe_allow_html=True)
         for s_id, s_desc in steps:
@@ -142,7 +132,7 @@ def render_node_contents(row_id, row_category, row_goal):
     else:
         st.caption("No custom action plan added to this objective yet.")
 
-# 5. High-End Skyrim Constellation Map Dashboard Track (With inline action display)
+# 5. Skyrim Constellation Map Dashboard Track
 st.subheader("🌌 THE ACTIVE CONSTELLATION MAP")
 st.write("Expand a Level Node star to gaze into your registered dream paths and custom execution steps.")
 
@@ -174,21 +164,17 @@ for i in range(6, 11):
 
 st.markdown("---")
 
-# 6. Interactive Workshop Module (Build Custom Action Blueprints dynamically)
+# 6. Interactive Workshop Module
 st.subheader("🛠️ THE MASTER WORKSHOP: STRATEGIZE BLUEPRINTS")
 if not df.empty:
     st.write("Select any goal below to inject highly specific tracking habits or execution details directly beneath it.")
-    
-    # Create dropdown picker mapping cleanly to current master goals
     goal_options = {f"Year {r['Year']} [{r['Category']}] - {r['Goal']}": r['ID'] for idx, r in df.iterrows()}
     selected_target_str = st.selectbox("Choose Target Goal to Map Out:", list(goal_options.keys()))
     selected_target_id = goal_options[selected_target_str]
     
-    # Single-line input form for the blueprint steps
     with st.form("action_step_form", clear_on_submit=True):
         new_step = st.text_input("What action or habit will you do to accomplish this? (e.g., 'Hit the gym 3x a week')")
         add_step_btn = st.form_submit_button("🔨 Inject Action Step into Goal")
-        
         if add_step_btn and new_step.strip():
             cursor.execute("INSERT INTO action_plans (goal_id, step_description) VALUES (?, ?)", (selected_target_id, new_step.strip()))
             conn.commit()
@@ -210,6 +196,7 @@ with col1:
         for idx, row in p1_nodes.iterrows():
             with st.container(border=True):
                 render_node_contents(row['ID'], row['Category'], row['Goal'])
+                # Safe operational line structure layout
                 if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
                     cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
                     conn.commit()
@@ -225,3 +212,16 @@ with col2:
             with st.container(border=True):
                 render_node_contents(row['ID'], row['Category'], row['Goal'])
                 if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
+                    cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
+                    conn.commit()
+                    st.rerun()
+    else:
+        st.caption("No adept traits active.")
+
+with col3:
+    st.markdown("#### 📈 THE MASTER TREE\n*Level 70 - 100 Perks (Years 7-10)*")
+    p3_nodes = df[df["Year"] > 6]
+    if not p3_nodes.empty:
+        for idx, row in p3_nodes.iterrows():
+            with st.container(border=True):
+                render_node_contents(row['ID'], row['Category'], row['Goal'])
