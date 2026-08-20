@@ -2,116 +2,180 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
-# 1. Page Configuration & Custom Theme Styles Injection
+# 1. Page Configuration & Skyrim Nebula Interface Styling
 st.set_page_config(
-    page_title="Horizon10 | Vision Studio",
-    page_icon="✨",
+    page_title="Dovahkiin | Horizon10 Skill Tree",
+    page_icon="🌌",
     layout="wide"
 )
 
-# Custom UI/UX Styles injection
+# Deep cosmic theme styles mimicking the game UI
 st.markdown("""
 <style>
+    /* Dark space void canvas backdrop */
     .stApp {
-        background-color: #0b0f19;
-        color: #f3f4f6;
+        background: radial-gradient(circle at center, #111424 0%, #060810 100%);
+        color: #e2e8f0;
+        font-family: 'Futura', 'Helvetica Neue', sans-serif;
     }
-    .timeline-container {
+    
+    /* Skyrim Skill Header Typography */
+    .skyrim-title {
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 6px;
+        color: #ffffff;
+        font-size: 2.5rem;
+        text-shadow: 0 0 15px rgba(255,255,255,0.4);
+        margin-bottom: 2px;
+    }
+    .skyrim-subtitle {
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 40px;
+    }
+    
+    /* Cosmic Galaxy Constellation Map Row Track */
+    .nebula-track {
         display: flex;
-        justify-content: space-between;
+        justify-content: space-around;
         align-items: center;
         position: relative;
-        padding: 40px 20px;
-        background: linear-gradient(145deg, #111827, #1f2937);
-        border-radius: 16px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        border: 1px solid #374151;
+        padding: 60px 20px;
+        background: url('https://unsplash.com') center center no-repeat;
+        background-size: cover;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        box-shadow: inset 0 0 50px #000, 0 15px 35px rgba(0,0,0,0.6);
+        border: 2px solid #1e293b;
     }
-    .timeline-line {
-        position: absolute;
-        top: 50%;
-        left: 5%;
-        right: 5%;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
-        z-index: 1;
-        transform: translateY(-50%);
-    }
-    .timeline-node {
+    
+    /* Interactive Shimmering Constellation Nodes */
+    .constellation-node {
         position: relative;
-        z-index: 2;
         display: flex;
         flex-direction: column;
         align-items: center;
         cursor: pointer;
     }
-    .timeline-dot {
-        width: 24px;
-        height: 24px;
+    .star-core {
+        width: 18px;
+        height: 18px;
+        background: #ffffff;
         border-radius: 50%;
-        background-color: #111827;
-        border: 4px solid #3b82f6;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
+        border: 3px solid #6366f1;
+        box-shadow: 0 0 15px #6366f1, 0 0 30px #8b5cf6;
+        transition: all 0.4s ease;
     }
-    .timeline-node:hover .timeline-dot {
-        transform: scale(1.4);
-        background-color: #3b82f6;
-        box-shadow: 0 0 20px #3b82f6, 0 0 40px #8b5cf6;
+    .constellation-node:hover .star-core {
+        transform: scale(1.6);
+        background: #818cf8;
+        box-shadow: 0 0 25px #ff007f, 0 0 50px #ff007f;
+        border-color: #ff007f;
     }
-    .timeline-bubble {
+    
+    /* Skyrim Description Pop-up Glass Panel bubble */
+    .perk-popup {
         visibility: hidden;
-        width: 220px;
-        background: rgba(17, 24, 39, 0.95);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        color: #fff;
+        width: 250px;
+        background: rgba(10, 15, 30, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #f1f5f9;
         text-align: center;
-        border-radius: 12px;
-        padding: 12px;
+        padding: 16px;
+        border-radius: 8px;
         position: absolute;
-        z-index: 10;
-        bottom: 150%;
+        z-index: 100;
+        bottom: 160%;
         left: 50%;
         transform: translateX(-50%) translateY(10px);
         opacity: 0;
-        transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.7);
     }
-    .timeline-node:hover .timeline-bubble {
+    .perk-popup::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: rgba(10, 15, 30, 0.9) transparent transparent transparent;
+    }
+    .constellation-node:hover .perk-popup {
         visibility: visible;
         opacity: 1;
         transform: translateX(-50%) translateY(0);
     }
-    .timeline-label {
-        margin-top: 8px;
-        font-weight: 600;
-        font-size: 14px;
-        color: #9ca3af;
+    .node-title {
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 13px;
+        color: #38bdf8;
+        letter-spacing: 1px;
     }
-    .phase-card {
-        background: #111827;
-        border-radius: 14px;
-        padding: 20px;
-        border: 1px solid #1f2937;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        min-height: 250px;
-        margin-bottom: 20px;
+    
+    /* Skyrim Skill Attributes HUD Panel Bar */
+    .hud-bar-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    .hud-bar-wrapper {
+        width: 260px;
+        text-align: center;
+    }
+    .hud-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 5px;
+        color: #94a3b8;
+    }
+    .hud-base-track {
+        height: 6px;
+        background: #1e293b;
+        border-radius: 3px;
+        overflow: hidden;
+        border: 1px solid #334155;
+    }
+    .hud-fill {
+        height: 100%;
+        transition: width 0.5s ease-in-out;
+    }
+    
+    /* Column Deck layout formatting cards */
+    .tree-card {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 25px;
+    }
+    .perk-unlocked-card {
+        background: linear-gradient(135deg, #1e1b4b, #0f172a);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border-left: 4px solid #6366f1;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Database Setup
+# 2. Database Core Mechanics Setup
 def init_db():
-    conn = sqlite3.connect("roadmap_v3.db", check_same_thread=False)
+    conn = sqlite3.connect("skyrim_blueprint.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT, board_id INTEGER, 
-            year INTEGER, category TEXT, goal TEXT, status TEXT
+            year INTEGER, category TEXT, goal TEXT, level_req INTEGER
         )
     """)
     conn.commit()
@@ -120,97 +184,90 @@ def init_db():
 conn = init_db()
 cursor = conn.cursor()
 
-# 3. Sidebar Board Selection
-st.sidebar.markdown("<h2 style='color:#3b82f6; margin-bottom:0;'>🎨 Studio Canvas</h2>", unsafe_allow_html=True)
+# 3. Sidebar Configuration Console Layout
+st.sidebar.markdown("<h2 style='color:#818cf8; letter-spacing:2px; text-transform:uppercase; font-size:18px;'>⚡ Character Profile</h2>", unsafe_allow_html=True)
 
 cursor.execute("SELECT id, name FROM boards")
 all_boards = cursor.fetchall()
 if not all_boards:
-    cursor.execute("INSERT INTO boards (name) VALUES (?)", ("My Vision Core Blueprint",))
+    cursor.execute("INSERT INTO boards (name) VALUES (?)", ("Main Character Arc Plan",))
     conn.commit()
     st.rerun()
 
 board_dict = {name: b_id for b_id, name in all_boards}
-selected_board_name = st.sidebar.selectbox("Current Active Map:", list(board_dict.keys()))
+selected_board_name = st.sidebar.selectbox("Active Character Save Sheet:", list(board_dict.keys()))
 active_board_id = board_dict[selected_board_name]
 
-# 4. Sidebar Form: Add New Milestones
+# Form panel to generate skill perks matching constellations
 st.sidebar.markdown("---")
-st.sidebar.markdown("### ➕ Drop a New Milestone")
-with st.sidebar.form("add_goal_form", clear_on_submit=True):
-    new_year = st.slider("Target Horizon Year", min_value=1, max_value=10, value=1)
-    new_cat = st.selectbox("Life Pillar Focus", ["💼 Career & Wealth", "🏡 Lifestyle & Home", "💪 Health & Vitality", "❤️ Relationships", "🧠 Personal Growth"])
-    new_goal = st.text_input("Enter your dream brief...")
-    submit = st.form_submit_button("Manifest Onto Board")
+st.sidebar.markdown("### 🏹 Unlock a New Perk Node")
+with st.sidebar.form("add_perk_form", clear_on_submit=True):
+    new_year = st.slider("Required Level Milestone (Year Horizon)", min_value=1, max_value=10, value=1)
+    new_cat = st.selectbox("Constellation Skill Tree Pillar", ["💼 Career & Wealth", "🏡 Lifestyle & Home", "💪 Health & Vitality", "❤️ Relationships", "🧠 Personal Growth"])
+    new_goal = st.text_input("Perk Mastery Description...")
+    submit = st.form_submit_button("Engrave Into Constellation")
     
     if submit and new_goal.strip():
-        cursor.execute("INSERT INTO goals (board_id, year, category, goal, status) VALUES (?, ?, ?, ?, ?)",
-                       (active_board_id, new_year, new_cat, new_goal.strip(), "In Progress"))
+        # Set arbitrary point requirement value modifier based on targeted timeline year spacing multiplier
+        level_req = new_year * 10
+        cursor.execute("INSERT INTO goals (board_id, year, category, goal, level_req) VALUES (?, ?, ?, ?, ?)",
+                       (active_board_id, new_year, new_cat, new_goal.strip(), level_req))
         conn.commit()
         st.rerun()
 
-# Sidebar Settings: Creation & Wiping
-with st.sidebar.expander("🛠️ Board Studio Settings", expanded=False):
-    new_board = st.text_input("Create Brand New Roadmap:")
-    if st.button("Initialize New Canvas") and new_board.strip():
-        try:
-            cursor.execute("INSERT INTO boards (name) VALUES (?)", (new_board.strip(),))
-            conn.commit()
-            st.rerun()
-        except sqlite3.IntegrityError:
-            st.error("Name taken!")
-    st.markdown("---")
-    if st.button("🗑️ Wipe Active Canvas Completely"):
-        cursor.execute("DELETE FROM boards WHERE id = ?", (active_board_id,))
-        cursor.execute("DELETE FROM goals WHERE board_id = ?", (active_board_id,))
-        conn.commit()
-        st.rerun()
+# 4. Main Character HUD Layout Construction
+st.markdown(f"<h1 class='skyrim-title'>{selected_board_name}</h1>", unsafe_allow_html=True)
+st.markdown("<p class='skyrim-subtitle'>Level 100 Personal Growth Interface Matrix</p>", unsafe_allow_html=True)
 
-# 5. Main App Header Interface
-st.markdown(f"<h1 style='text-align: center; margin-bottom: 5px; color:#ffffff;'>✨ {selected_board_name}</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #9ca3af; margin-bottom: 40px;'>Hover over timeline nodes below to peek into future targets instantly.</p>", unsafe_allow_html=True)
+# Pull current profile's inventory rows
+cursor.execute("SELECT id, year, category, goal, level_req FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
+df = pd.DataFrame(cursor.fetchall(), columns=["ID", "Year", "Category", "Goal", "LevelReq"])
 
-# Fetch Goal Data
-cursor.execute("SELECT id, year, category, goal FROM goals WHERE board_id = ? ORDER BY year ASC", (active_board_id,))
-goals_list = cursor.fetchall()
-df = pd.DataFrame(goals_list, columns=["ID", "Year", "Category", "Goal"])
+# Dynamically compute metrics for the HUD status bar fill values
+total_milestones = len(df)
+career_count = len(df[df["Category"] == "💼 Career & Wealth"])
+health_count = len(df[df["Category"] == "💪 Health & Vitality"])
+growth_count = len(df[df["Category"] == "🧠 Personal Growth"])
 
-# 6. Interactive Floating-Bubble Map Generator
-timeline_html = '<div class="timeline-container"><div class="timeline-line"></div>'
-for target_year in range(1, 11):
-    year_milestones = df[df["Year"] == target_year]
-    if not year_milestones.empty:
-        bubble_content = "<br>".join([f"<b>{row['Category']}:</b> {row['Goal'][:40]}..." for idx, row in year_milestones.iterrows()])
-        dot_style = "border-color: #ec4899; box-shadow: 0 0 15px #ec4899;"
+# Convert to percentages for CSS filling widths
+magicka_width = min(100, (growth_count * 20) + 20)
+health_width = min(100, (health_count * 20) + 20)
+stamina_width = min(100, (career_count * 20) + 20)
+
+# Render Skyrim Core HUD Bars (Magicka / Health / Stamina setup remixed)
+st.markdown(f"""
+<div class='hud-bar-container'>
+    <div class='hud-bar-wrapper'>
+        <div class='hud-label'>🧠 Magicka (Growth Focus) {magicka_width}/100</div>
+        <div class='hud-base-track'><div class='hud-fill' style='width: {magicka_width}%; background: #3b82f6;'></div></div>
+    </div>
+    <div class='hud-bar-wrapper'>
+        <div class='hud-label'>❤️ Health (Vitality Status) {health_width}/100</div>
+        <div class='hud-base-track'><div class='hud-fill' style='width: {health_width}%; background: #ef4444;'></div></div>
+    </div>
+    <div class='hud-bar-wrapper'>
+        <div class='hud-label'>⚡ Stamina (Wealth Engine) {stamina_width}/100</div>
+        <div class='hud-base-track'><div class='hud-fill' style='width: {stamina_width}%; background: #10b981;'></div></div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+# 5. Build the Dynamic Interactive Nebula Sky Map Panel Grid
+nebula_html = '<div class="nebula-track"><div class="timeline-line"></div>'
+
+for step_year in range(1, 11):
+    year_nodes = df[df["Year"] == step_year]
+    
+    if not year_nodes.empty:
+        # Loop formatting individual node text descriptors within the custom tooltip glass block container element
+        bubble_body = "<br>".join([f"<span style='color:#a78bfa;'>✦</span> <b>{row['Category'][2:]}:</b> {row['Goal'][:35]}" for idx, row in year_nodes.iterrows()])
+        node_glow = "background: #a78bfa; border-color: #ffffff; box-shadow: 0 0 20px #8b5cf6, 0 0 40px #ff007f;"
     else:
-        bubble_content = "No milestones configured for this calendar track yet."
-        dot_style = "border-color: #3b82f6;"
+        bubble_body = "Locked. No active development parameters registered for this calendar cycle."
+        node_glow = "background: #111424; border-color: #3b82f6;"
 
-    timeline_html += f"""<div class="timeline-node"><div class="timeline-bubble"><span style='color:#3b82f6; font-weight:bold; font-size:15px;'>📅 Year {target_year} Forecast</span><br><hr style='border-color:rgba(255,255,255,0.1); margin:6px 0;'><span style='font-size:12px; color:#e5e7eb; display:block; text-align:left;'>{bubble_content}</span></div><div class="timeline-dot" style="{dot_style}"></div><div class="timeline-label">Yr {target_year}</div></div>"""
-timeline_html += '</div>'
-
-st.markdown(timeline_html, unsafe_allow_html=True)
-
-# 7. Clean Macro Data Management Desk
-st.markdown("<br>", unsafe_allow_html=True)
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.markdown("<div class='phase-card'><h3>🚀 Phase 1: Near Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 1 - 3 • Core Foundations</p></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("<div class='phase-card'><h3>🏗️ Phase 2: Mid Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 4 - 6 • Transition Shifts</p></div>", unsafe_allow_html=True)
-with col3:
-    st.markdown("<div class='phase-card'><h3>📈 Phase 3: Far Horizon</h3><p style='color:#6b7280; font-size:13px;'>Years 7 - 10 • Compounding Results</p></div>", unsafe_allow_html=True)
-
-st.markdown("### 📊 Active Milestones Registry")
-if not df.empty:
-    for idx, row in df.iterrows():
-        r_col1, r_col2, r_col3 = st.columns([2, 6, 2])
-        r_col1.write(f"**Year {row['Year']}** ({row['Category']})")
-        r_col2.info(row['Goal'])
-        if r_col3.button("🗑️ Drop", key=f"del_{row['ID']}"):
-            cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
-            conn.commit()
-            st.rerun()
-else:
-    st.info("Your active vision canvas is completely blank. Drop a milestone via the sidebar menu to begin tracking.")
+    nebula_html += f"""
+    <div class="constellation-node">
+        <div class="perk-popup">
+            <div class="node-title">✨ Milestone Orbit {step_year}</div>
+            <div style="font-size:10px; color:#64748b; margin-bottom:8px; text-transform:uppercase;">Required Skill LVL: {step_year * 10}</div>
