@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Deep cosmic ambient backdrop using safe, unnested global CSS
+# Deep cosmic ambient backdrop using stable global layout overrides
 st.markdown("""
 <style>
     .stApp {
@@ -20,20 +20,31 @@ st.markdown("""
         text-transform: uppercase !important;
         letter-spacing: 2px !important;
     }
-    .action-plan-box {
-        background-color: rgba(30, 41, 59, 0.5);
+    .perk-container {
+        border: 1px solid #1e293b;
+        background-color: rgba(15, 23, 42, 0.4);
+        padding: 16px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+    }
+    .action-step-item {
+        background-color: rgba(30, 41, 59, 0.6);
         border-left: 3px solid #38bdf8;
-        padding: 10px 15px;
-        margin-top: 5px;
-        border-radius: 0 6px 6px 0;
+        padding: 8px 12px;
+        margin-top: 6px;
+        border-radius: 0 8px 8px 0;
+        font-size: 13px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Database Core Setup
+# 2. Database Core Setup (With Fix for Foreign Key Cascades)
 def init_db():
-    conn = sqlite3.connect("skyrim_blueprint_v5.db", check_same_thread=False)
+    conn = sqlite3.connect("skyrim_blueprint_final.db", check_same_thread=False)
     cursor = conn.cursor()
+    # CRITICAL BUG FIX: Explicitly turn on foreign key cascade support for SQLite
+    cursor.execute("PRAGMA foreign_keys = ON")
+    
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
@@ -54,7 +65,10 @@ def init_db():
 conn = init_db()
 cursor = conn.cursor()
 
-# 3. Sidebar Configuration Console Layout
+# Enforce foreign keys on connection re-checks
+cursor.execute("PRAGMA foreign_keys = ON")
+
+# 3. Profile Management Console Layout
 st.sidebar.markdown("### 🌌 LEVEL UP STATUS")
 
 cursor.execute("SELECT id, name FROM boards")
@@ -115,77 +129,79 @@ hud_col1, hud_col2, hud_col3 = st.columns(3)
 with hud_col1:
     st.metric(label="🧠 MAGICKA (Personal Growth Focus)", value=f"{min(100, (growth_count * 20) + 20)} / 100 Level")
 with hud_col2:
-    st.metric(label="❤️ HEALTH (Vitality & Wellbeing Status)", value=f"{min(100, (health_count * 20) + 20)} / 100 Level")
+    st.metric(label="❤️ HEALTH (Vitality Status)", value=f"{min(100, (health_count * 20) + 20)} / 100 Level")
 with hud_col3:
     st.metric(label="⚡ STAMINA (Wealth Engine & Career)", value=f"{min(100, (career_count * 20) + 20)} / 100 Level")
 st.markdown("---")
 
-def render_node_contents(row_id, row_category, row_goal):
-    st.markdown(f"#### {row_category}")
-    st.markdown(f"**🎯 Target:** {row_goal}")
-    cursor.execute("SELECT id, step_description FROM action_plans WHERE goal_id = ?", (row_id,))
+def render_nested_node_perk(g_id, g_category, g_goal):
+    st.markdown(f"##### {g_category}")
+    st.markdown(f"**🎯 Objective:** {g_goal}")
+    
+    cursor.execute("SELECT id, step_description FROM action_plans WHERE goal_id = ?", (g_id,))
     steps = cursor.fetchall()
     if steps:
-        st.markdown("<p style='font-size:12px; color:#38bdf8; margin-bottom:2px; text-transform:uppercase;'>📋 Active Execution Blueprint:</p>", unsafe_allow_html=True)
         for s_id, s_desc in steps:
-            st.markdown(f"<div class='action-plan-box'>• {s_desc}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='action-step-item'>⚡ {s_desc}</div>", unsafe_allow_html=True)
     else:
-        st.caption("No custom action plan added to this objective yet.")
+        st.caption("No sub-action track registered yet.")
 
-# 5. Skyrim Constellation Map Dashboard Track
+# 5. Interactive Constellation Node Track Block
 st.subheader("🌌 THE ACTIVE CONSTELLATION MAP")
-st.write("Expand a Level Node star to gaze into your registered dream paths and custom execution steps.")
+st.write("Expand a level orbit node star to view goals alongside their sub-action step logs.")
 
 map_cols = st.columns(5)
 for i in range(1, 6):
     with map_cols[i-1]:
         year_nodes = df[df["Year"] == i]
-        node_status = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
-        with st.expander(f"⭐ LEVEL {i*10} ({node_status})", expanded=False):
+        node_lbl = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
+        with st.expander(f"⭐ LEVEL {i*10} ({node_lbl})", expanded=False):
             if not year_nodes.empty:
                 for idx, row in year_nodes.iterrows():
-                    render_node_contents(row['ID'], row['Category'], row['Goal'])
+                    render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
                     st.markdown("---")
             else:
-                st.caption("No development paths active here.")
+                st.caption("No development points spent here.")
 
 map_cols_2 = st.columns(5)
 for i in range(6, 11):
     with map_cols_2[i-6]:
         year_nodes = df[df["Year"] == i]
-        node_status = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
-        with st.expander(f"⭐ LEVEL {i*10} ({node_status})", expanded=False):
+        node_lbl = f"✨ {len(year_nodes)} Active" if not year_nodes.empty else "⚫ Locked"
+        with st.expander(f"⭐ LEVEL {i*10} ({node_lbl})", expanded=False):
             if not year_nodes.empty:
                 for idx, row in year_nodes.iterrows():
-                    render_node_contents(row['ID'], row['Category'], row['Goal'])
+                    render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
                     st.markdown("---")
             else:
-                st.caption("No development paths active here.")
+                st.caption("No development points spent here.")
 
 st.markdown("---")
 
-# 6. Interactive Workshop Module
-st.subheader("🛠️ THE MASTER WORKSHOP: STRATEGIZE BLUEPRINTS")
+# 6. Interactive Sub-Blueprint Entry Workshop
+st.subheader("🛠️ THE MASTER WORKSHOP: STRATEGIZE CUSTOM PATHS")
 if not df.empty:
-    st.write("Select any goal below to inject highly specific tracking habits or execution details directly beneath it.")
-    goal_options = {f"Year {r['Year']} [{r['Category']}] - {r['Goal']}": r['ID'] for idx, r in df.iterrows()}
-    selected_target_str = st.selectbox("Choose Target Goal to Map Out:", list(goal_options.keys()))
-    selected_target_id = goal_options[selected_target_str]
+    st.write("Select any active goal below to map out precise, multi-tiered action execution tasks.")
     
-    with st.form("action_step_form", clear_on_submit=True):
-        new_step = st.text_input("What action or habit will you do to accomplish this? (e.g., 'Hit the gym 3x a week')")
-        add_step_btn = st.form_submit_button("🔨 Inject Action Step into Goal")
-        if add_step_btn and new_step.strip():
-            cursor.execute("INSERT INTO action_plans (goal_id, step_description) VALUES (?, ?)", (selected_target_id, new_step.strip()))
+    goal_mapping = {f"Year {r['Year']} [{r['Category']}] - {r['Goal']}": r['ID'] for idx, r in df.iterrows()}
+    chosen_goal_str = st.selectbox("Select Target Master Goal to Layer Plan Steps Underneath:", list(goal_mapping.keys()))
+    chosen_goal_id = goal_mapping[chosen_goal_str]
+    
+    with st.form("action_sub_form", clear_on_submit=True):
+        sub_action_txt = st.text_input("Enter localized blueprint step (e.g. 'Intermittent fasting 16:8 schedule')")
+        submit_step = st.form_submit_button("🔨 Inject Sub-Action Step Into Track")
+        
+        if submit_step and sub_action_txt.strip():
+            cursor.execute("INSERT INTO action_plans (goal_id, step_description) VALUES (?, ?)", (chosen_goal_id, sub_action_txt.strip()))
             conn.commit()
-            st.toast("Action plan step registered!")
+            st.toast("Action plan sub-step successfully locked in!")
             st.rerun()
 else:
-    st.info("Add an initial goal from the sidebar to open the Action Strategy Workshop module.")
+    st.info("Log a primary master goal on the left menu tab to open this blueprint design workbench tool.")
 
 st.markdown("---")
 
-# 7. Structured Phase Tree Column View Panel
+# 7. Stable Non-Nested Perk Tree Log Display Cards
 st.subheader("📜 ACTIVE PERK TREE LOGS")
 col1, col2, col3 = st.columns(3)
 
@@ -195,8 +211,8 @@ with col1:
     if not p1_nodes.empty:
         for idx, row in p1_nodes.iterrows():
             with st.container(border=True):
-                render_node_contents(row['ID'], row['Category'], row['Goal'])
-                # Safe operational line structure layout
+                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+                st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
                     cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
                     conn.commit()
@@ -210,18 +226,10 @@ with col2:
     if not p2_nodes.empty:
         for idx, row in p2_nodes.iterrows():
             with st.container(border=True):
-                render_node_contents(row['ID'], row['Category'], row['Goal'])
+                render_nested_node_perk(row['ID'], row['Category'], row['Goal'])
+                st.markdown("<br>", unsafe_allow_html=True)
                 if st.button("🚫 Revoke Perk", key=f"del_{row['ID']}"):
                     cursor.execute("DELETE FROM goals WHERE id = ?", (row['ID'],))
                     conn.commit()
                     st.rerun()
     else:
-        st.caption("No adept traits active.")
-
-with col3:
-    st.markdown("#### 📈 THE MASTER TREE\n*Level 70 - 100 Perks (Years 7-10)*")
-    p3_nodes = df[df["Year"] > 6]
-    if not p3_nodes.empty:
-        for idx, row in p3_nodes.iterrows():
-            with st.container(border=True):
-                render_node_contents(row['ID'], row['Category'], row['Goal'])
