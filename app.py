@@ -4,7 +4,7 @@ import pandas as pd
 
 # 1. Page Configuration & Futuristic Theme Architecture
 st.set_page_config(
-    page_title="Horizon10 | Strategic Network Launcher",
+    page_title="Horizon10",
     page_icon="📡",
     layout="wide"
 )
@@ -73,7 +73,7 @@ st.markdown("""
 
 # 2. Database Architectural Core Setup
 def init_db():
-    conn = sqlite3.connect("horizon10_network.db", check_same_thread=False)
+    conn = sqlite3.connect("horizon10_network_v2.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
@@ -185,7 +185,7 @@ map_cols = st.columns(5)
 for i in range(1, 6):
     with map_cols[i-1]:
         year_nodes = df[df["Year"] == i]
-        node_lbl = f"🔵 {len(year_nodes)} Channels Link" if not year_nodes.empty else "⚪ Offline"
+        node_lbl = f"🔵 {len(year_nodes)} Channels Link" if not year_nodes.empty else "⚫ Offline"
         with st.expander(f"📶 NODE INDEX {i*10} ({node_lbl})", expanded=False):
             if not year_nodes.empty:
                 for idx, row in year_nodes.iterrows():
@@ -198,7 +198,7 @@ map_cols_2 = st.columns(5)
 for i in range(6, 11):
     with map_cols_2[i-6]:
         year_nodes = df[df["Year"] == i]
-        node_lbl = f"🔵 {len(year_nodes)} Channels Link" if not year_nodes.empty else "⚪ Offline"
+        node_lbl = f"🔵 {len(year_nodes)} Channels Link" if not year_nodes.empty else "⚫ Offline"
         with st.expander(f"📶 NODE INDEX {i*10} ({node_lbl})", expanded=False):
             if not year_nodes.empty:
                 for idx, row in year_nodes.iterrows():
@@ -209,11 +209,12 @@ for i in range(6, 11):
 
 st.markdown("---")
 
-# 6. Interactive Sub-Blueprint Strategy Entry Workshop Module
+# 6. Interactive Sub-Blueprint Strategy Entry Workshop Module (Flat Logic Fix)
 st.subheader("🛠️ CENTRAL ARCHITECT LABORATORY: DEPLOY SUBSYSTEM STRATEGY")
-if not df.empty:
+if df.empty:
+    st.info("Log an active primary target node on the sidebar console parameters panel to initialize this module.")
+else:
     st.write("Select any target node pipeline below to append actionable tactical execution plans.")
-    
     goal_mapping = {f"Node {r['Year']*10} [{r['Category']}] - {r['Goal']}": r['ID'] for idx, r in df.iterrows()}
     chosen_goal_str = st.selectbox("Target Array Pipeline Selector Node Target:", list(goal_mapping.keys()))
     chosen_goal_id = goal_mapping[chosen_goal_str]
