@@ -73,7 +73,7 @@ st.markdown("""
 
 # 2. Database Architectural Core Setup
 def init_db():
-    conn = sqlite3.connect("horizon10_network_v2.db", check_same_thread=False)
+    conn = sqlite3.connect("horizon10_network_v3.db", check_same_thread=False)
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("CREATE TABLE IF NOT EXISTS boards (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE)")
@@ -209,7 +209,7 @@ for i in range(6, 11):
 
 st.markdown("---")
 
-# 6. Interactive Sub-Blueprint Strategy Entry Workshop Module (Flat Logic Fix)
+# 6. Central Architect Laboratory (Completely Simplified Action Injection Processing)
 st.subheader("🛠️ CENTRAL ARCHITECT LABORATORY: DEPLOY SUBSYSTEM STRATEGY")
 if df.empty:
     st.info("Log an active primary target node on the sidebar console parameters panel to initialize this module.")
@@ -219,8 +219,7 @@ else:
     chosen_goal_str = st.selectbox("Target Array Pipeline Selector Node Target:", list(goal_mapping.keys()))
     chosen_goal_id = goal_mapping[chosen_goal_str]
     
-    with st.form("action_sub_form", clear_on_submit=True):
-        sub_action_txt = st.text_input("Enter localized blueprint step (e.g. 'Calorie deficit framework tracking via MyFitnessPal')")
-        submit_step = st.form_submit_button("⚡ Inject Tactical Sub-Step into Stream")
-        
-        if submit_step and sub_action_txt.strip():
+    sub_action_txt = st.text_input("Enter localized blueprint step (e.g. 'Calorie deficit framework tracking via MyFitnessPal')")
+    
+    if st.button("⚡ Inject Tactical Sub-Step into Stream"):
+        if sub_action_txt.strip():
